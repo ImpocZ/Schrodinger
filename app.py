@@ -9,7 +9,7 @@ class Player(pg.sprite.Sprite):
         self.rect = pg.Rect(self.x - self.radius, 600 - self.radius, self.radius * 2, self.radius * 2)
 
     def move(self, dx, rad):
-        self.radius = rad  # Update radius for collision detection
+        self.radius = rad
         self.x += dx
         self.x = max(rad, min(self.x, 1200 - rad))
         self.rect = pg.Rect(self.x - rad, 600 - rad, rad * 2, rad * 2)
@@ -27,12 +27,14 @@ class fallingObject(pg.sprite.Sprite):
         self.speed = 420
         self.y = y
         self.radius = 20
-        self.rect = pg.Rect(self.x - 20, self.y - 20, 40, 40)  # For collision detection
+        self.rect = pg.Rect(self.x - 20, self.y - 20, 40, 40)
     
     def update(self, dt):
         self.y += self.speed * dt
         self.y = max(0, min(self.y, 800))
         self.rect.center = (int(self.x), int(self.y))
+        if self.y >= 800:
+            self.kill()
     
     def draw(self, screen):
         pg.draw.circle(screen, (self.colour), (int(self.x), int(self.y)), 20)
@@ -59,7 +61,7 @@ def main():
     falling_group.add(fallingBoi)
     running = True
     while running:
-        dt = clock.tick(60) / 1000   # seconds since last frame
+        dt = clock.tick(60) / 1000
 
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -90,11 +92,9 @@ def main():
             score += 1
             print(f"Score: {score}")
 
-        # Update all falling objects
         falling_group.update(dt)
 
-        # Drawing
-        screen.fill((0, 0, 0))           # clear screen FIRST
+        screen.fill((0, 0, 0))
         ball.draw(screen, size)
         for i in falling_group:
             i.draw(screen)
