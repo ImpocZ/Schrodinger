@@ -7,6 +7,7 @@ class Player(pg.sprite.Sprite):
         self.x = x
         self.radius = 50
         self.rect = pg.Rect(self.x - self.radius, 600 - self.radius, self.radius * 2, self.radius * 2)
+        self.lives = 5    
 
     def move(self, dx, rad):
         self.radius = rad
@@ -23,18 +24,20 @@ class fallingObject(pg.sprite.Sprite):
     def __init__(self, y):
         super().__init__()
         self.x = random.randint(20, 1180)
-        self.colour = ((random.randint(0, 255)), (random.randint(0, 255)), (random.randint(0, 255)))
+        self.colour = ((random.randint(20, 255)), (random.randint(20, 255)), (random.randint(20, 255)))
         self.speed = 420
         self.y = y
         self.radius = 20
         self.rect = pg.Rect(self.x - 20, self.y - 20, 40, 40)
     
-    def update(self, dt):
+    def update(self, dt, player):
         self.y += self.speed * dt
         self.y = max(0, min(self.y, 800))
         self.rect.center = (int(self.x), int(self.y))
         if self.y >= 800:
+            player.lives -= 1
             self.kill()
+            
     
     def draw(self, screen):
         pg.draw.circle(screen, (self.colour), (int(self.x), int(self.y)), 20)
@@ -44,10 +47,35 @@ def printScore(score, screen):
     text = font.render(f"Score: {score}", True, (255, 255, 255))
     screen.blit(text, (10, 10))
 
-def main():   
+def printLives(lives, screen):
+    font = pg.font.Font(None, 36)
+    text = font.render(f"Lives: {lives}", True, (255, 255, 255))
+    screen.blit(text, (10, 50))
+
+def menu():
     pg.init()
     screen = pg.display.set_mode((1200, 800))
     clock = pg.time.Clock()
+    while True:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                return
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_RETURN:
+                    main(clock, screen)
+                    return
+        screen.fill((0, 0, 0))
+        font = pg.font.Font(None, 74)
+        title_text = font.render("Falling Objects Game", True, (255, 255, 255))
+        instruction_text = font.render("Press Enter to Start", True, (255, 255, 255))
+        screen.blit(title_text, (300, 250))
+        screen.blit(instruction_text, (350, 350))
+        pg.display.flip()
+        clock.tick(60)
+    
+
+def main(clock, screen):   
     spawn_interval = 1000
     last_spawn_time = pg.time.get_ticks()
     max_objects = 15
@@ -66,6 +94,10 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
+
+        if ball.lives <= 0:
+            print("Game Over")
+            running = False
 
         keys = pg.key.get_pressed()
         direction = keys[pg.K_d] - keys[pg.K_a]
@@ -90,9 +122,9 @@ def main():
                 ball.kill()
             
             score += 1
-            print(f"Score: {score}")
+            #print(f"Score: {score}")
 
-        falling_group.update(dt)
+        falling_group.update(dt, ball)
 
         screen.fill((0, 0, 0))
         ball.draw(screen, size)
@@ -100,5 +132,7 @@ def main():
             i.draw(screen)
 
         printScore(score, screen)
+        printLives(ball.lives, screen)
         pg.display.flip()
-main()
+
+menu()
